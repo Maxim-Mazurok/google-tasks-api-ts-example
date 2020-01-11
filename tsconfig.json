@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "inlineSourceMap": false,
+    "inlineSources": false,
+    "noImplicitAny": false,
+    "suppressExcessPropertyErrors": true,
+    "diagnostics": false,
+    "listFiles": false,
+    "outDir": "dist",
+    "noEmitOnError": false,
+    "strict": true
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "name": "google-tasks-api-ts-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": {
+    "name": "Maxim Mazurok",
+    "url": "https://maxim.mazurok.com",
+    "email": "maxim@mazurok.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@types/gapi": "0.0.39",
+    "@types/gapi.auth2": "0.0.51",
+    "@types/gapi.client.tasks": "^1.0.1",
+    "typescript": "^3.7.4"
+  }
+}

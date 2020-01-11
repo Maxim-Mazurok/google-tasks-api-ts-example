@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Tasks API TypeScript Example</title>
+</head>
+<body>
+<!--Add buttons to initiate auth sequence and sign out-->
+<button id="authorize_button" style="display: none;">Authorize</button>
+<button id="signout_button" style="display: none;">Sign Out</button>
+
+<pre id="content" style="white-space: pre-wrap;"></pre>
+
+<script src="index.js"></script>
+<script async defer src="https://apis.google.com/js/api.js"
+        onload="this.onload=function(){};handleClientLoad()"
+        onreadystatechange="if (this.readyState === 'complete') this.onload()">
+</script>
+</body>
+</html>
