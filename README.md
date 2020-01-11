@@ -3,6 +3,9 @@ Very basic (and sometimes ugly) but working example of Google Tasks API usage in
 
 
 ## Instructions:
+1. `git clone https://github.com/Maxim-Mazurok/google-tasks-api-ts-example`
+1. `cd google-tasks-api-ts-example`
+1. `npm install`
 1. Get Client ID and API key: [instructions](https://developers.google.com/tasks/quickstart/js#step_1_turn_on_the)
 1. Set `CLIENT_ID` and `API_KEY` in [src/index.ts](src/index.ts)
 1. Run `npm run compile` to compile TS to JS (`index.js` should appear in `dist` folder)
