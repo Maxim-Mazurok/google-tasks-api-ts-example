@@ -88,7 +88,7 @@ function appendPre(message) {
  */
 function listTaskLists() {
   gapi.client.tasks.tasklists.list({
-    maxResults: '10',
+    maxResults: 10,
   }).then(function (response) {
     appendPre('Task Lists:');
     const taskLists = response.result.items;
