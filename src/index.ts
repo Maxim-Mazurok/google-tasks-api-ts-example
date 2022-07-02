@@ -2,19 +2,18 @@
 const CLIENT_ID =
   "xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com";
 const API_KEY = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+// Developer token from Google Ads API Center
+const DEVELOPER_TOKEN = "XXXXXXXXXXXXXXXXXXXXXX";
+
 
 // Array of API discovery doc URLs for APIs used by the quickstart
 const DISCOVERY_DOCS = [
-  "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
   "https://googleads.googleapis.com/$discovery/rest?version=v11",
 ];
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-const SCOPES = [
-  "https://www.googleapis.com/auth/tasks.readonly",
-  "https://www.googleapis.com/auth/adwords",
-];
+const SCOPES = ["https://www.googleapis.com/auth/adwords"];
 
 const authorizeButton = document.getElementById("authorize_button");
 const signoutButton = document.getElementById("signout_button");
@@ -37,7 +36,6 @@ function initClient() {
       clientId: CLIENT_ID,
       discoveryDocs: DISCOVERY_DOCS,
       scope: SCOPES.join(" "),
-      "developer-token": "XXXXXXXXXXXXXXXXXXXXXX",
     })
     .then(
       function () {
@@ -63,7 +61,7 @@ function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
     authorizeButton && (authorizeButton.style.display = "none");
     signoutButton && (signoutButton.style.display = "block");
-    listTaskLists();
+    suggestGeoTargets();
   } else {
     authorizeButton && (authorizeButton.style.display = "block");
     signoutButton && (signoutButton.style.display = "none");
@@ -97,55 +95,19 @@ function appendPre(message) {
 }
 
 /**
- * Print task lists.
+ * Print suggested geo targets.
  */
-function listTaskLists() {
-  // gapi.client.tasks.tasklists
-  //   .list({
-  //     maxResults: 10,
-  //   })
-  //   .then(function (response) {
-  //     appendPre("Task Lists:");
-  //     const taskLists = response.result.items;
-  //     if (taskLists && taskLists.length > 0) {
-  //       for (let i = 0; i < taskLists.length; i++) {
-  //         const taskList = taskLists[i];
-  //         appendPre(taskList.title + " (" + taskList.id + ")");
-
-  //         taskList.id &&
-  //           gapi.client.tasks.tasks
-  //             .list({
-  //               tasklist: taskList.id,
-  //             })
-  //             .then((response) => {
-  //               appendPre("\nTasks:");
-  //               response.result.items &&
-  //                 response.result.items.forEach((task) =>
-  //                   appendPre(task.title)
-  //                 );
-  //             });
-  //       }
-  //     } else {
-  //       appendPre("No task lists found.");
-  //     }
-  //   });
-
+function suggestGeoTargets() {
   gapi.client
     .request({
       path: "https://content-googleads.googleapis.com/v11/geoTargetConstants:suggest",
       body: {
-        geoTargets: { geoTargetConstants: ["20118"] },
+        geoTargets: { geoTargetConstants: ["geoTargetConstants/20118"] },
         countryCode: "AU",
-      },
-      headers: { "developer-token": "XXXXXXXXXXXXXXXXXXXXXX" },
+      } as gapi.client.googleads.GoogleAdsGoogleadsV11Services__SuggestGeoTargetConstantsRequest,
+      method: "POST",
+      headers: { "developer-token": DEVELOPER_TOKEN },
     })
-    // gapi.client.googleads.geoTargetConstants
-    //   .suggest(
-    //     {},
-    //     { geoTargets: { geoTargetConstants: ["20118"] }, countryCode: "AU" },
-    //     // @ts-expect-error
-    //     { headers: { "developer-token": "XXXXXXXXXXXXXXXXXXXXXX" } }
-    //   )
-    .then((x) => console.log(x))
-    .catch((x) => console.error(x));
+    .then((x) => appendPre(JSON.stringify(x.result, null, 2)))
+    .catch((x) => appendPre(JSON.stringify(x, null, 2)));
 }
