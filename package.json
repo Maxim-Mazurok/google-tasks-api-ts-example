@@ -15,7 +15,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@types/gapi.auth2": "0.0.56",
+    "@types/gapi.auth2": "^0.0.56",
     "@types/gapi.client.tasks": "^1.0.4",
     "typescript": "^4.7.4"
   }
