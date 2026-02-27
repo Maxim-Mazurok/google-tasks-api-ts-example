@@ -17,3 +17,4 @@ Very basic (and sometimes ugly) but working example of Google Tasks API usage in
 - Make sure that you're serving via https (using `https-serve` + edit `hosts` file, or `ngrok`)
 - Make sure that your domain is added in Google developer console
 - You can open issue here if you need help
+# Sync test 1772203799
