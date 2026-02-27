@@ -12,12 +12,14 @@
     "listFiles": false,
     "outDir": "dist",
     "noEmitOnError": false,
-    "strict": true
+    "strict": true,
+    "types": ["gapi", "gapi.auth2", "gapi.client", "gapi.client.tasks"]
   },
   "include": [
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "src/**/*.test.ts"
   ]
 }
