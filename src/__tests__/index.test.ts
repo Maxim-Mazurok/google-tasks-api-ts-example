@@ -152,6 +152,93 @@ describe("handleClientLoad", () => {
   });
 });
 
+describe("initClient", () => {
+  beforeEach(() => {
+    mockClientInit.mockReset();
+    mockListenFn.mockClear();
+    mockGetFn.mockClear();
+    mockContentElement.appendChild.mockClear();
+    mockAuthorizeButton.onclick = null;
+    mockSignoutButton.onclick = null;
+    mockTasklistsList.mockReset();
+  });
+
+  it("should call gapi.client.init with correct parameters", () => {
+    mockClientInit.mockReturnValue({ then: jest.fn() });
+
+    initClient();
+
+    expect(mockClientInit).toHaveBeenCalledWith({
+      apiKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      clientId:
+        "xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+      discoveryDocs: [
+        "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
+      ],
+      scope: "https://www.googleapis.com/auth/tasks.readonly",
+    });
+  });
+
+  it("should set up sign-in state listener on success", () => {
+    mockGetFn.mockReturnValue(false);
+    mockClientInit.mockReturnValue({
+      then: (onSuccess: () => void) => {
+        onSuccess();
+      },
+    });
+
+    initClient();
+
+    expect(mockListenFn).toHaveBeenCalledWith(updateSigninStatus);
+  });
+
+  it("should handle the initial sign-in state on success", () => {
+    mockGetFn.mockReturnValue(true);
+    mockTasklistsList.mockReturnValue({ then: jest.fn() });
+    mockClientInit.mockReturnValue({
+      then: (onSuccess: () => void) => {
+        onSuccess();
+      },
+    });
+
+    initClient();
+
+    expect(mockGetFn).toHaveBeenCalled();
+  });
+
+  it("should set up button onclick handlers on success", () => {
+    mockGetFn.mockReturnValue(false);
+    mockClientInit.mockReturnValue({
+      then: (onSuccess: () => void) => {
+        onSuccess();
+      },
+    });
+
+    initClient();
+
+    expect(mockAuthorizeButton.onclick).toBe(handleAuthClick);
+    expect(mockSignoutButton.onclick).toBe(handleSignoutClick);
+  });
+
+  it("should display error message on failure", () => {
+    const mockError = { error: "init_failed", message: "Failed to init" };
+    mockClientInit.mockReturnValue({
+      then: (_onSuccess: () => void, onError: (error: any) => void) => {
+        onError(mockError);
+      },
+    });
+
+    initClient();
+
+    const appendedTexts = mockContentElement.appendChild.mock.calls.map(
+      (call: any[]) => call[0].textContent
+    );
+    expect(appendedTexts).toContain(
+      JSON.stringify(mockError, null, 2) + "\n"
+    );
+  });
+});
+
 describe("handleAuthClick", () => {
   beforeEach(() => {
     mockSignIn.mockClear();
