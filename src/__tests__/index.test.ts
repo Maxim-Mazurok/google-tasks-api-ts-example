@@ -169,9 +169,8 @@ describe("initClient", () => {
     initClient();
 
     expect(mockClientInit).toHaveBeenCalledWith({
-      apiKey: "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-      clientId:
-        "xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
+      apiKey: expect.any(String),
+      clientId: expect.any(String),
       discoveryDocs: [
         "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
       ],

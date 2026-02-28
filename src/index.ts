@@ -1,6 +1,5 @@
-// Client ID and API key from the Developer Console
-const CLIENT_ID = 'xxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com';
-const API_KEY = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+// Credentials loaded from src/config.ts (gitignored — see src/config.example.ts for setup)
+import { CLIENT_ID, API_KEY } from './config';
 
 // Array of API discovery doc URLs for APIs used by the quickstart
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest'];
