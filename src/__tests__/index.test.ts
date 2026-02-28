@@ -1,23 +1,21 @@
 /**
  * Unit tests for the Google Tasks API example application.
  *
- * Tests the core functions with mocked DOM and gapi globals.
+ * Tests the core functions with mocked DOM and gapi/google globals.
  */
 
-// We need to mock the gapi global and DOM elements before importing the module,
-// because the module executes document.getElementById on import.
+// We need to mock the gapi/google globals and DOM elements before importing the module.
 
 // Mock DOM elements
 const mockAuthorizeButton = {
   style: { display: "" },
-  onclick: null as ((ev: MouseEvent) => any) | null,
 };
 const mockSignoutButton = {
   style: { display: "" },
-  onclick: null as ((ev: MouseEvent) => any) | null,
 };
 const mockContentElement = {
   appendChild: vi.fn(),
+  innerText: "",
 };
 
 // Override getElementById to return our mocks
@@ -30,42 +28,50 @@ vi.spyOn(document, "getElementById").mockImplementation((id: string) => {
 });
 
 // Mock the gapi global
-const mockSignIn = vi.fn();
-const mockSignOut = vi.fn();
-const mockListenFn = vi.fn();
-const mockGetFn = vi.fn();
 const mockTasklistsList = vi.fn();
 const mockTasksList = vi.fn();
 const mockClientInit = vi.fn();
 const mockLoad = vi.fn();
+const mockGetToken = vi.fn();
+const mockSetToken = vi.fn();
+
+// Define credential globals needed by the module
+(globalThis as any).CLIENT_ID = "test-client-id";
+(globalThis as any).API_KEY = "test-api-key";
 
 (globalThis as any).gapi = {
   load: mockLoad,
   client: {
     init: mockClientInit,
+    getToken: mockGetToken,
+    setToken: mockSetToken,
     tasks: {
       tasklists: { list: mockTasklistsList },
       tasks: { list: mockTasksList },
     },
   },
-  auth2: {
-    getAuthInstance: () => ({
-      signIn: mockSignIn,
-      signOut: mockSignOut,
-      isSignedIn: {
-        listen: mockListenFn,
-        get: mockGetFn,
-      },
-    }),
+};
+
+// Mock the Google Identity Services (GIS) global
+const mockRequestAccessToken = vi.fn();
+const mockInitTokenClient = vi.fn();
+const mockRevoke = vi.fn();
+
+(globalThis as any).google = {
+  accounts: {
+    oauth2: {
+      initTokenClient: mockInitTokenClient,
+      revoke: mockRevoke,
+    },
   },
 };
 
 // Now import the module (after mocks are set up)
 import {
   appendPre,
-  updateSigninStatus,
   handleClientLoad,
-  initClient,
+  initGapiClient,
+  gisLoaded,
   handleAuthClick,
   handleSignoutClick,
   listTaskLists,
@@ -100,165 +106,115 @@ describe("appendPre", () => {
   });
 });
 
-describe("updateSigninStatus", () => {
-  beforeEach(() => {
-    mockAuthorizeButton.style.display = "";
-    mockSignoutButton.style.display = "";
-    mockTasklistsList.mockReset();
-    mockTasksList.mockReset();
-  });
-
-  it("should hide authorize button and show signout button when signed in", () => {
-    // Mock listTaskLists to prevent actual API call
-    mockTasklistsList.mockReturnValue({ then: vi.fn() });
-
-    updateSigninStatus(true);
-
-    expect(mockAuthorizeButton.style.display).toBe("none");
-    expect(mockSignoutButton.style.display).toBe("block");
-  });
-
-  it("should show authorize button and hide signout button when signed out", () => {
-    updateSigninStatus(false);
-
-    expect(mockAuthorizeButton.style.display).toBe("block");
-    expect(mockSignoutButton.style.display).toBe("none");
-  });
-
-  it("should call listTaskLists when signed in", () => {
-    mockTasklistsList.mockReturnValue({ then: vi.fn() });
-
-    updateSigninStatus(true);
-
-    expect(mockTasklistsList).toHaveBeenCalledWith({ maxResults: 10 });
-  });
-
-  it("should not call listTaskLists when signed out", () => {
-    updateSigninStatus(false);
-
-    expect(mockTasklistsList).not.toHaveBeenCalled();
-  });
-});
-
 describe("handleClientLoad", () => {
   beforeEach(() => {
     mockLoad.mockClear();
   });
 
-  it("should call gapi.load with client:auth2", () => {
+  it("should call gapi.load with client and initGapiClient", () => {
     handleClientLoad();
 
-    expect(mockLoad).toHaveBeenCalledWith("client:auth2", initClient);
+    expect(mockLoad).toHaveBeenCalledWith("client", initGapiClient);
   });
 });
 
-describe("initClient", () => {
+describe("initGapiClient", () => {
   beforeEach(() => {
     mockClientInit.mockReset();
-    mockListenFn.mockClear();
-    mockGetFn.mockClear();
-    mockContentElement.appendChild.mockClear();
-    mockAuthorizeButton.onclick = null;
-    mockSignoutButton.onclick = null;
-    mockTasklistsList.mockReset();
+    mockAuthorizeButton.style.display = "";
   });
 
-  it("should call gapi.client.init with correct parameters", () => {
-    mockClientInit.mockReturnValue({ then: vi.fn() });
+  it("should call gapi.client.init with apiKey and discoveryDocs (no clientId or scope)", async () => {
+    mockClientInit.mockResolvedValue({});
 
-    initClient();
+    await initGapiClient();
 
     expect(mockClientInit).toHaveBeenCalledWith({
       apiKey: expect.any(String),
-      clientId: expect.any(String),
       discoveryDocs: [
         "https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest",
       ],
+    });
+    expect(mockClientInit).not.toHaveBeenCalledWith(
+      expect.objectContaining({ clientId: expect.anything() })
+    );
+  });
+});
+
+describe("gisLoaded", () => {
+  beforeEach(() => {
+    mockInitTokenClient.mockClear();
+    mockInitTokenClient.mockReturnValue({
+      requestAccessToken: mockRequestAccessToken,
+      callback: "",
+    });
+  });
+
+  it("should initialize tokenClient via google.accounts.oauth2.initTokenClient", () => {
+    gisLoaded();
+
+    expect(mockInitTokenClient).toHaveBeenCalledWith({
+      client_id: expect.any(String),
       scope: "https://www.googleapis.com/auth/tasks.readonly",
+      callback: "",
     });
-  });
-
-  it("should set up sign-in state listener on success", () => {
-    mockGetFn.mockReturnValue(false);
-    mockClientInit.mockReturnValue({
-      then: (onSuccess: () => void) => {
-        onSuccess();
-      },
-    });
-
-    initClient();
-
-    expect(mockListenFn).toHaveBeenCalledWith(updateSigninStatus);
-  });
-
-  it("should handle the initial sign-in state on success", () => {
-    mockGetFn.mockReturnValue(true);
-    mockTasklistsList.mockReturnValue({ then: vi.fn() });
-    mockClientInit.mockReturnValue({
-      then: (onSuccess: () => void) => {
-        onSuccess();
-      },
-    });
-
-    initClient();
-
-    expect(mockGetFn).toHaveBeenCalled();
-  });
-
-  it("should set up button onclick handlers on success", () => {
-    mockGetFn.mockReturnValue(false);
-    mockClientInit.mockReturnValue({
-      then: (onSuccess: () => void) => {
-        onSuccess();
-      },
-    });
-
-    initClient();
-
-    expect(mockAuthorizeButton.onclick).toBe(handleAuthClick);
-    expect(mockSignoutButton.onclick).toBe(handleSignoutClick);
-  });
-
-  it("should display error message on failure", () => {
-    const mockError = { error: "init_failed", message: "Failed to init" };
-    mockClientInit.mockReturnValue({
-      then: (_onSuccess: () => void, onError: (error: any) => void) => {
-        onError(mockError);
-      },
-    });
-
-    initClient();
-
-    const appendedTexts = mockContentElement.appendChild.mock.calls.map(
-      (call: any[]) => call[0].textContent
-    );
-    expect(appendedTexts).toContain(
-      JSON.stringify(mockError, null, 2) + "\n"
-    );
   });
 });
 
 describe("handleAuthClick", () => {
   beforeEach(() => {
-    mockSignIn.mockClear();
+    mockRequestAccessToken.mockClear();
+    mockGetToken.mockReturnValue(null);
+    mockInitTokenClient.mockReturnValue({
+      requestAccessToken: mockRequestAccessToken,
+      callback: "",
+    });
+    gisLoaded(); // initialize tokenClient
   });
 
-  it("should call gapi.auth2 signIn", () => {
-    handleAuthClick(null);
+  it("should request access token with consent prompt when not signed in", () => {
+    handleAuthClick();
 
-    expect(mockSignIn).toHaveBeenCalled();
+    expect(mockRequestAccessToken).toHaveBeenCalledWith({ prompt: "consent" });
+  });
+
+  it("should request access token without prompt when already signed in", () => {
+    mockGetToken.mockReturnValue({ access_token: "mock-token" });
+
+    handleAuthClick();
+
+    expect(mockRequestAccessToken).toHaveBeenCalledWith({ prompt: "" });
   });
 });
 
 describe("handleSignoutClick", () => {
   beforeEach(() => {
-    mockSignOut.mockClear();
+    mockGetToken.mockClear();
+    mockSetToken.mockClear();
+    mockRevoke.mockClear();
+    mockAuthorizeButton.style.display = "none";
+    mockSignoutButton.style.display = "block";
+    mockContentElement.innerText = "some content";
   });
 
-  it("should call gapi.auth2 signOut", () => {
-    handleSignoutClick(null);
+  it("should revoke token and reset UI when signed in", () => {
+    mockGetToken.mockReturnValue({ access_token: "mock-token" });
 
-    expect(mockSignOut).toHaveBeenCalled();
+    handleSignoutClick();
+
+    expect(mockRevoke).toHaveBeenCalledWith("mock-token", expect.any(Function));
+    expect(mockSetToken).toHaveBeenCalled();
+    expect(mockAuthorizeButton.style.display).toBe("block");
+    expect(mockSignoutButton.style.display).toBe("none");
+  });
+
+  it("should do nothing when not signed in", () => {
+    mockGetToken.mockReturnValue(null);
+
+    handleSignoutClick();
+
+    expect(mockRevoke).not.toHaveBeenCalled();
+    expect(mockSetToken).not.toHaveBeenCalled();
   });
 });
 

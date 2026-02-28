@@ -1,73 +1,113 @@
-// Credentials loaded from src/config.ts (gitignored — see src/config.example.ts for setup)
-import { CLIENT_ID, API_KEY } from './config';
+// Credentials are declared as globals — loaded via config.js script tag in index.html
+declare const CLIENT_ID: string;
+declare const API_KEY: string;
+
+// Google Identity Services (GIS) type declarations
+declare namespace google {
+  namespace accounts {
+    namespace oauth2 {
+      interface TokenClient {
+        callback: string | ((tokenResponse: TokenResponse) => void);
+        requestAccessToken(overrideConfig?: { prompt?: string }): void;
+      }
+      interface TokenResponse {
+        access_token: string;
+        error?: string;
+      }
+      function initTokenClient(config: {
+        client_id: string;
+        scope: string;
+        callback: string | ((tokenResponse: TokenResponse) => void);
+      }): TokenClient;
+      function revoke(token: string, done: () => void): void;
+    }
+  }
+}
 
 // Array of API discovery doc URLs for APIs used by the quickstart
 const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/rest'];
 
-// Authorization scopes required by the API; multiple scopes can be
-// included, separated by spaces.
+// Authorization scopes required by the API
 const SCOPES = 'https://www.googleapis.com/auth/tasks.readonly';
+
+let tokenClient: google.accounts.oauth2.TokenClient | null = null;
+let gapiInited = false;
+let gisInited = false;
 
 const getAuthorizeButton = () => document.getElementById('authorize_button');
 const getSignoutButton = () => document.getElementById('signout_button');
 
-/**
- *  On load, called to load the auth2 library and API client library.
- */
-export function handleClientLoad() {
-  gapi.load('client:auth2', initClient);
-}
-
-/**
- *  Initializes the API client library and sets up sign-in state
- *  listeners.
- */
-export function initClient() {
-  gapi.client.init({
-    apiKey: API_KEY,
-    clientId: CLIENT_ID,
-    discoveryDocs: DISCOVERY_DOCS,
-    scope: SCOPES,
-  }).then(function () {
-    // Listen for sign-in state changes.
-    gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
-
-    // Handle the initial sign-in state.
-    updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-    getAuthorizeButton() && (getAuthorizeButton()!.onclick = handleAuthClick);
-    getSignoutButton() && (getSignoutButton()!.onclick = handleSignoutClick);
-  }, function (error) {
-    appendPre(JSON.stringify(error, null, 2));
-  });
-}
-
-/**
- *  Called when the signed in status changes, to update the UI
- *  appropriately. After a sign-in, the API is called.
- */
-export function updateSigninStatus(isSignedIn) {
-  if (isSignedIn) {
-    getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'none');
-    getSignoutButton() && (getSignoutButton()!.style.display = 'block');
-    listTaskLists();
-  } else {
+function maybeEnableButtons() {
+  if (gapiInited && gisInited) {
     getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'block');
-    getSignoutButton() && (getSignoutButton()!.style.display = 'none');
   }
 }
 
 /**
- *  Sign in the user upon button click.
+ * Called by api.js onload to load the gapi client library.
  */
-export function handleAuthClick(event) {
-  gapi.auth2.getAuthInstance().signIn();
+export function handleClientLoad() {
+  gapi.load('client', initGapiClient);
 }
 
 /**
- *  Sign out the user upon button click.
+ * Initializes the gapi client library for API calls (no auth).
  */
-export function handleSignoutClick(event) {
-  gapi.auth2.getAuthInstance().signOut();
+export async function initGapiClient() {
+  await gapi.client.init({
+    apiKey: API_KEY,
+    discoveryDocs: DISCOVERY_DOCS,
+  });
+  gapiInited = true;
+  maybeEnableButtons();
+}
+
+/**
+ * Called by the GIS script onload to initialize the OAuth token client.
+ */
+export function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: '',
+  });
+  gisInited = true;
+  maybeEnableButtons();
+}
+
+/**
+ * Sign in the user upon button click.
+ */
+export function handleAuthClick() {
+  tokenClient!.callback = (tokenResponse: google.accounts.oauth2.TokenResponse) => {
+    if (tokenResponse.error !== undefined) {
+      appendPre(JSON.stringify(tokenResponse, null, 2));
+      return;
+    }
+    getSignoutButton() && (getSignoutButton()!.style.display = 'block');
+    getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'none');
+    listTaskLists();
+  };
+  if (gapi.client.getToken() === null) {
+    tokenClient!.requestAccessToken({ prompt: 'consent' });
+  } else {
+    tokenClient!.requestAccessToken({ prompt: '' });
+  }
+}
+
+/**
+ * Sign out the user upon button click.
+ */
+export function handleSignoutClick() {
+  const token = gapi.client.getToken();
+  if (token !== null) {
+    google.accounts.oauth2.revoke(token.access_token, () => {});
+    gapi.client.setToken('' as any);
+    const content = document.getElementById('content') as HTMLPreElement | null;
+    if (content) content.innerText = '';
+    getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'block');
+    getSignoutButton() && (getSignoutButton()!.style.display = 'none');
+  }
 }
 
 /**
