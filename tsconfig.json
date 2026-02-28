@@ -12,7 +12,7 @@
     "outDir": "dist",
     "noEmitOnError": false,
     "strict": true,
-    "types": ["gapi", "gapi.auth2", "gapi.client", "gapi.client.tasks"]
+    "types": ["gapi", "gapi.auth2", "gapi.client", "gapi.client.tasks-v1"]
   },
   "include": [
     "src/**/*.ts"
