@@ -27,9 +27,3 @@ jobs:
 
       - run: npm test
 
-      - name: Deploy to production
-        if: github.ref == 'refs/heads/master'
-        run: |
-          echo "Deploying..."
-        env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}

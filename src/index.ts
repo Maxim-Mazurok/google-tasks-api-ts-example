@@ -130,7 +130,7 @@ export function createTask(taskListId: string, title: string, notes?: string, du
 
   return gapi.client.tasks.tasks.insert({
     tasklist: taskListId,
-    ...taskBody,
+    resource: taskBody,
   }).then(function(resp) {
     appendPre('Created task: ' + resp.result.title);
     return resp.result;
@@ -158,9 +158,11 @@ export function completeTask(taskListId: string, taskId: string) {
   gapi.client.tasks.tasks.patch({
     tasklist: taskListId,
     task: taskId,
-    status: 'completed',
-    completed: new Date().toISOString(),
-  } as any).then(function(resp) {
+    resource: {
+      status: 'completed',
+      completed: new Date().toISOString(),
+    },
+  }).then(function(resp) {
     appendPre('Task completed: ' + resp.result.title);
   });
 }
@@ -212,7 +214,7 @@ export function moveTask(tasklistId: string, taskId: string, previousTaskId?: st
     params.previous = previousTaskId;
   }
 
-  gapi.client.tasks.tasks.move(params).then(function(resp) {
+  return gapi.client.tasks.tasks.move(params).then(function(resp) {
     appendPre('Task moved: ' + resp.result.title);
   });
 }

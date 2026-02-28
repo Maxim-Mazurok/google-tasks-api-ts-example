@@ -22,6 +22,10 @@ jest.spyOn(document, "getElementById").mockImplementation((id: string) => {
   return originalGetElementById(id);
 });
 
+afterAll(() => {
+  (document.getElementById as unknown as jest.SpyInstance).mockRestore();
+});
+
 (globalThis as any).gapi = {
   load: jest.fn(),
   client: {
@@ -77,7 +81,7 @@ describe("createTask", () => {
     expect(mockInsertTask).toHaveBeenCalledWith(
       expect.objectContaining({
         tasklist: "list-1",
-        title: "New Task",
+        resource: expect.objectContaining({ title: "New Task" }),
       })
     );
   });
@@ -91,7 +95,7 @@ describe("createTask", () => {
 
     expect(mockInsertTask).toHaveBeenCalledWith(
       expect.objectContaining({
-        due: "2024-12-25T00:00:00.000Z",
+        resource: expect.objectContaining({ due: "2024-12-25T00:00:00.000Z" }),
       })
     );
   });
@@ -145,7 +149,7 @@ describe("completeTask", () => {
       expect.objectContaining({
         tasklist: "list-1",
         task: "task-1",
-        status: "completed",
+        resource: expect.objectContaining({ status: "completed" }),
       })
     );
   });
