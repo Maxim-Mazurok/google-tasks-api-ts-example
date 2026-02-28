@@ -158,8 +158,10 @@ export function completeTask(taskListId: string, taskId: string) {
   gapi.client.tasks.tasks.patch({
     tasklist: taskListId,
     task: taskId,
-    status: 'completed',
-    completed: new Date().toISOString(),
+    resource: {
+      status: 'completed',
+      completed: new Date().toISOString(),
+    },
   }).then(function(resp) {
     appendPre('Task completed: ' + resp.result.title);
   });
