@@ -89,29 +89,45 @@ export function appendPre(message) {
 /**
  * Print task lists.
  */
-export function listTaskLists() {
-  gapi.client.tasks.tasklists.list({
-    maxResults: 10,
-  }).then(function (response) {
-    appendPre('Task Lists:');
-    const taskLists = response.result.items;
-    if (taskLists && taskLists.length > 0) {
-      cachedTaskLists = taskLists;
-      for (let i = 0; i < taskLists.length; i++) {
-        const taskList = taskLists[i];
-        appendPre(taskList.title + ' (' + taskList.id + ')');
+export async function listTaskLists() {
+  appendPre('Task Lists:');
+  let pageToken: string | undefined;
+  const allTaskLists: any[] = [];
 
-        taskList.id && gapi.client.tasks.tasks.list({
-          tasklist: taskList.id,
-        }).then((response) => {
-          appendPre('\nTasks:');
-          response.result.items && response.result.items.forEach(task => appendPre(task.title));
-        });
-      }
-    } else {
-      appendPre('No task lists found.');
+  do {
+    const params: any = { maxResults: 100 };
+    if (pageToken) {
+      params.pageToken = pageToken;
     }
-  });
+
+    const response = await new Promise<any>((resolve) => {
+      gapi.client.tasks.tasklists.list(params).then(resolve);
+    });
+
+    const items = response.result.items;
+    if (items && items.length > 0) {
+      allTaskLists.push(...items);
+    }
+    pageToken = response.result.nextPageToken;
+  } while (pageToken);
+
+  cachedTaskLists = allTaskLists;
+
+  if (allTaskLists.length > 0) {
+    for (let i = 0; i < allTaskLists.length; i++) {
+      const taskList = allTaskLists[i];
+      appendPre(taskList.title + ' (' + taskList.id + ')');
+
+      taskList.id && gapi.client.tasks.tasks.list({
+        tasklist: taskList.id,
+      }).then((response) => {
+        appendPre('\nTasks:');
+        response.result.items && response.result.items.forEach(task => appendPre(task.title));
+      });
+    }
+  } else {
+    appendPre('No task lists found.');
+  }
 }
 
 /**
