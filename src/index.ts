@@ -9,8 +9,8 @@ const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/r
 // included, separated by spaces.
 const SCOPES = 'https://www.googleapis.com/auth/tasks.readonly';
 
-const authorizeButton = document.getElementById('authorize_button');
-const signoutButton = document.getElementById('signout_button');
+const getAuthorizeButton = () => document.getElementById('authorize_button');
+const getSignoutButton = () => document.getElementById('signout_button');
 
 /**
  *  On load, called to load the auth2 library and API client library.
@@ -35,8 +35,8 @@ export function initClient() {
 
     // Handle the initial sign-in state.
     updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
-    authorizeButton && (authorizeButton.onclick = handleAuthClick);
-    signoutButton && (signoutButton.onclick = handleSignoutClick);
+    getAuthorizeButton() && (getAuthorizeButton()!.onclick = handleAuthClick);
+    getSignoutButton() && (getSignoutButton()!.onclick = handleSignoutClick);
   }, function (error) {
     appendPre(JSON.stringify(error, null, 2));
   });
@@ -48,12 +48,12 @@ export function initClient() {
  */
 export function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
-    authorizeButton && (authorizeButton.style.display = 'none');
-    signoutButton && (signoutButton.style.display = 'block');
+    getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'none');
+    getSignoutButton() && (getSignoutButton()!.style.display = 'block');
     listTaskLists();
   } else {
-    authorizeButton && (authorizeButton.style.display = 'block');
-    signoutButton && (signoutButton.style.display = 'none');
+    getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'block');
+    getSignoutButton() && (getSignoutButton()!.style.display = 'none');
   }
 }
 
