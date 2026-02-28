@@ -24,7 +24,6 @@ export function handleClientLoad() {
  *  listeners.
  */
 export function initClient() {
-  throw "testing 123";
   gapi.client.init({
     apiKey: API_KEY,
     clientId: CLIENT_ID,
