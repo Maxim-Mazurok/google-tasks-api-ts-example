@@ -7,10 +7,13 @@ const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/r
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-const SCOPES = 'https://www.googleapis.com/auth/tasks.readonly';
+const SCOPES = 'https://www.googleapis.com/auth/tasks';
 
 const authorizeButton = document.getElementById('authorize_button');
 const signoutButton = document.getElementById('signout_button');
+
+// Cache for task lists to avoid refetching
+let cachedTaskLists: any[] = [];
 
 /**
  *  On load, called to load the auth2 library and API client library.
@@ -93,6 +96,7 @@ export function listTaskLists() {
     appendPre('Task Lists:');
     const taskLists = response.result.items;
     if (taskLists && taskLists.length > 0) {
+      cachedTaskLists = taskLists;
       for (let i = 0; i < taskLists.length; i++) {
         const taskList = taskLists[i];
         appendPre(taskList.title + ' (' + taskList.id + ')');
@@ -107,5 +111,160 @@ export function listTaskLists() {
     } else {
       appendPre('No task lists found.');
     }
+  });
+}
+
+/**
+ * Create a new task in the specified task list.
+ */
+export function createTask(taskListId: string, title: string, notes?: string, dueDate?: string) {
+  const taskBody: any = {
+    title: title,
+    notes: notes,
+    status: 'needsAction',
+  };
+
+  if (dueDate) {
+    taskBody.due = dueDate;
+  }
+
+  return gapi.client.tasks.tasks.insert({
+    tasklist: taskListId,
+    ...taskBody,
+  }).then(function(resp) {
+    appendPre('Created task: ' + resp.result.title);
+    return resp.result;
+  }).catch(function(err) {
+    console.log('Error creating task: ' + err);
+  });
+}
+
+/**
+ * Delete a task from the specified task list.
+ */
+export function deleteTask(tasklistId: string, taskId: string) {
+  gapi.client.tasks.tasks.delete({
+    tasklist: tasklistId,
+    task: taskId,
+  }).then(function() {
+    appendPre('Task deleted successfully');
+  });
+}
+
+/**
+ * Mark a task as completed.
+ */
+export function completeTask(taskListId: string, taskId: string) {
+  gapi.client.tasks.tasks.patch({
+    tasklist: taskListId,
+    task: taskId,
+    status: 'completed',
+    completed: new Date().toISOString(),
+  }).then(function(resp) {
+    appendPre('Task completed: ' + resp.result.title);
+  });
+}
+
+/**
+ * Create a new task list.
+ */
+export function createTaskList(title: string) {
+  if (title == '') {
+    appendPre('Error: Task list title cannot be empty');
+    return;
+  }
+
+  return gapi.client.tasks.tasklists.insert({
+    title: title,
+  } as any).then(function(resp) {
+    appendPre('Created task list: ' + resp.result.title);
+    cachedTaskLists.push(resp.result);
+    return resp.result;
+  });
+}
+
+/**
+ * Delete a task list.
+ */
+export function deleteTaskList(taskListId: string) {
+  gapi.client.tasks.tasklists.delete({
+    tasklist: taskListId,
+  }).then(function() {
+    appendPre('Task list deleted');
+    // Update cache
+    for (let i = 0; i < cachedTaskLists.length; i++) {
+      if (cachedTaskLists[i].id === taskListId) {
+        cachedTaskLists.splice(i, 1);
+      }
+    }
+  });
+}
+
+/**
+ * Move task to a different position.
+ */
+export function moveTask(tasklistId: string, taskId: string, previousTaskId?: string) {
+  const params: any = {
+    tasklist: tasklistId,
+    task: taskId,
+  };
+  if (previousTaskId) {
+    params.previous = previousTaskId;
+  }
+
+  gapi.client.tasks.tasks.move(params).then(function(resp) {
+    appendPre('Task moved: ' + resp.result.title);
+  });
+}
+
+/**
+ * Search tasks by title across all task lists.
+ * Returns matching tasks.
+ */
+export async function searchTasks(query: string): Promise<gapi.client.tasks.Task[]> {
+  const results: gapi.client.tasks.Task[] = [];
+  const q = query.toLowerCase();
+
+  for (let i = 0; i < cachedTaskLists.length; i++) {
+    const tl = cachedTaskLists[i];
+    if (!tl.id) continue;
+
+    const resp = await new Promise<any>((resolve) => {
+      gapi.client.tasks.tasks.list({
+        tasklist: tl.id,
+        maxResults: 100,
+      }).then(resolve);
+    });
+
+    if (resp.result.items) {
+      resp.result.items.forEach((task) => {
+        if (task.title && task.title.toLowerCase().indexOf(q) != -1) {
+          results.push(task);
+        }
+      });
+    }
+  }
+
+  appendPre('Found ' + results.length + ' tasks matching "' + query + '"');
+  return results;
+}
+
+/**
+ * Get all tasks with a due date before the specified date.
+ */
+export function getOverdueTasks(taskListId: string, beforeDate: Date) {
+  return gapi.client.tasks.tasks.list({
+    tasklist: taskListId,
+    dueMax: beforeDate.toISOString(),
+    showCompleted: false,
+  }).then(function(resp) {
+    const tasks = resp.result.items || [];
+    appendPre('Overdue tasks: ' + tasks.length);
+
+    tasks.forEach(function(task) {
+      appendPre('  - ' + task.title + ' (due: ' + task.due + ')');
+    });
+
+    return tasks;
   });
 }
