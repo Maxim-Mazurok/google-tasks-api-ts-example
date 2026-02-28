@@ -22,6 +22,10 @@ jest.spyOn(document, "getElementById").mockImplementation((id: string) => {
   return originalGetElementById(id);
 });
 
+afterAll(() => {
+  (document.getElementById as jest.SpyInstance).mockRestore();
+});
+
 (globalThis as any).gapi = {
   load: jest.fn(),
   client: {

@@ -142,9 +142,9 @@ export function createTask(taskListId: string, title: string, notes?: string, du
 /**
  * Delete a task from the specified task list.
  */
-export function deleteTask(tasklistId: string, taskId: string) {
-  gapi.client.tasks.tasks.delete({
-    tasklist: tasklistId,
+export function deleteTask(taskListId: string, taskId: string) {
+  return gapi.client.tasks.tasks.delete({
+    tasklist: taskListId,
     task: taskId,
   }).then(function() {
     appendPre('Task deleted successfully');
@@ -155,7 +155,7 @@ export function deleteTask(tasklistId: string, taskId: string) {
  * Mark a task as completed.
  */
 export function completeTask(taskListId: string, taskId: string) {
-  gapi.client.tasks.tasks.patch({
+  return gapi.client.tasks.tasks.patch({
     tasklist: taskListId,
     task: taskId,
     resource: {
@@ -189,7 +189,7 @@ export function createTaskList(title: string) {
  * Delete a task list.
  */
 export function deleteTaskList(taskListId: string) {
-  gapi.client.tasks.tasklists.delete({
+  return gapi.client.tasks.tasklists.delete({
     tasklist: taskListId,
   }).then(function() {
     appendPre('Task list deleted');
@@ -197,6 +197,7 @@ export function deleteTaskList(taskListId: string) {
     for (let i = 0; i < cachedTaskLists.length; i++) {
       if (cachedTaskLists[i].id === taskListId) {
         cachedTaskLists.splice(i, 1);
+        break;
       }
     }
   });
@@ -205,16 +206,16 @@ export function deleteTaskList(taskListId: string) {
 /**
  * Move task to a different position.
  */
-export function moveTask(tasklistId: string, taskId: string, previousTaskId?: string) {
+export function moveTask(taskListId: string, taskId: string, previousTaskId?: string) {
   const params: any = {
-    tasklist: tasklistId,
+    tasklist: taskListId,
     task: taskId,
   };
   if (previousTaskId) {
     params.previous = previousTaskId;
   }
 
-  gapi.client.tasks.tasks.move(params).then(function(resp) {
+  return gapi.client.tasks.tasks.move(params).then(function(resp) {
     appendPre('Task moved: ' + resp.result.title);
   });
 }

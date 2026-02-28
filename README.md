@@ -21,11 +21,11 @@ Very basic (and sometimes ugly) but working example of Google Tasks API usage in
 
 ## New API Functions:
 - `createTask(taskListId, title, notes?, dueDate?)` - Creates a new task
-- `deleteTask(tasklistId, taskId)` - Deletes a task
+- `deleteTask(taskListId, taskId)` - Deletes a task
 - `completeTask(taskListId, taskId)` - Marks task as done
 - `createTaskList(title)` - Creates a new task list
 - `deleteTaskList(taskListId)` - Deletes a task list
-- `moveTask(tasklistId, taskId, previousTaskId?)` - Reorders a task
+- `moveTask(taskListId, taskId, previousTaskId?)` - Reorders a task
 - `searchTasks(query)` - Search tasks by title
 - `getOverdueTasks(taskListId, beforeDate)` - Get overdue tasks
 
