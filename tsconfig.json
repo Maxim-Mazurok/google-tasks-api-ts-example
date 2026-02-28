@@ -7,7 +7,6 @@
     "inlineSourceMap": false,
     "inlineSources": false,
     "noImplicitAny": false,
-    "suppressExcessPropertyErrors": true,
     "diagnostics": false,
     "listFiles": false,
     "outDir": "dist",
