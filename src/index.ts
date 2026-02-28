@@ -7,7 +7,7 @@ const DISCOVERY_DOCS = ['https://www.googleapis.com/discovery/v1/apis/tasks/v1/r
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-const SCOPES = 'https://www.googleapis.com/auth/tasks';
+const SCOPES = 'https://www.googleapis.com/auth/tasks.readonly';
 
 const authorizeButton = document.getElementById('authorize_button');
 const signoutButton = document.getElementById('signout_button');
@@ -158,11 +158,9 @@ export function completeTask(taskListId: string, taskId: string) {
   gapi.client.tasks.tasks.patch({
     tasklist: taskListId,
     task: taskId,
-    resource: {
-      status: 'completed',
-      completed: new Date().toISOString(),
-    },
-  }).then(function(resp) {
+    status: 'completed',
+    completed: new Date().toISOString(),
+  } as any).then(function(resp) {
     appendPre('Task completed: ' + resp.result.title);
   });
 }
