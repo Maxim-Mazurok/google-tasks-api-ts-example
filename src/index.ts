@@ -130,7 +130,7 @@ export function createTask(taskListId: string, title: string, notes?: string, du
 
   return gapi.client.tasks.tasks.insert({
     tasklist: taskListId,
-    ...taskBody,
+    resource: taskBody,
   }).then(function(resp) {
     appendPre('Created task: ' + resp.result.title);
     return resp.result;
@@ -176,9 +176,7 @@ export function createTaskList(title: string) {
     return;
   }
 
-  return gapi.client.tasks.tasklists.insert({
-    title: title,
-  } as any).then(function(resp) {
+  return gapi.client.tasks.tasklists.insert({ resource: { title: title } } as any).then(function(resp) {
     appendPre('Created task list: ' + resp.result.title);
     cachedTaskLists.push(resp.result);
     return resp.result;
