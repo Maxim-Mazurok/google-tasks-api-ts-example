@@ -15,7 +15,7 @@ const signoutButton = document.getElementById('signout_button');
 /**
  *  On load, called to load the auth2 library and API client library.
  */
-function handleClientLoad() {
+export function handleClientLoad() {
   gapi.load('client:auth2', initClient);
 }
 
@@ -23,7 +23,7 @@ function handleClientLoad() {
  *  Initializes the API client library and sets up sign-in state
  *  listeners.
  */
-function initClient() {
+export function initClient() {
   gapi.client.init({
     apiKey: API_KEY,
     clientId: CLIENT_ID,
@@ -46,7 +46,7 @@ function initClient() {
  *  Called when the signed in status changes, to update the UI
  *  appropriately. After a sign-in, the API is called.
  */
-function updateSigninStatus(isSignedIn) {
+export function updateSigninStatus(isSignedIn) {
   if (isSignedIn) {
     authorizeButton && (authorizeButton.style.display = 'none');
     signoutButton && (signoutButton.style.display = 'block');
@@ -60,14 +60,14 @@ function updateSigninStatus(isSignedIn) {
 /**
  *  Sign in the user upon button click.
  */
-function handleAuthClick(event) {
+export function handleAuthClick(event) {
   gapi.auth2.getAuthInstance().signIn();
 }
 
 /**
  *  Sign out the user upon button click.
  */
-function handleSignoutClick(event) {
+export function handleSignoutClick(event) {
   gapi.auth2.getAuthInstance().signOut();
 }
 
@@ -77,7 +77,7 @@ function handleSignoutClick(event) {
  *
  * @param {string} message Text to be placed in pre element.
  */
-function appendPre(message) {
+export function appendPre(message) {
   const pre = document.getElementById('content');
   const textContent = document.createTextNode(message + '\n');
   pre && pre.appendChild(textContent);
@@ -86,7 +86,7 @@ function appendPre(message) {
 /**
  * Print task lists.
  */
-function listTaskLists() {
+export function listTaskLists() {
   gapi.client.tasks.tasklists.list({
     maxResults: 10,
   }).then(function (response) {

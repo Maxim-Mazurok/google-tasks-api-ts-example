@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "gapi", "gapi.auth2", "gapi.client", "gapi.client.tasks"]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
