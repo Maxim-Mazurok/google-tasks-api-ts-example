@@ -17,12 +17,12 @@ const mockSignoutButton = {
   onclick: null as ((ev: MouseEvent) => any) | null,
 };
 const mockContentElement = {
-  appendChild: jest.fn(),
+  appendChild: vi.fn(),
 };
 
 // Override getElementById to return our mocks
 const originalGetElementById = document.getElementById.bind(document);
-jest.spyOn(document, "getElementById").mockImplementation((id: string) => {
+vi.spyOn(document, "getElementById").mockImplementation((id: string) => {
   if (id === "authorize_button") return mockAuthorizeButton as any;
   if (id === "signout_button") return mockSignoutButton as any;
   if (id === "content") return mockContentElement as any;
@@ -30,14 +30,14 @@ jest.spyOn(document, "getElementById").mockImplementation((id: string) => {
 });
 
 // Mock the gapi global
-const mockSignIn = jest.fn();
-const mockSignOut = jest.fn();
-const mockListenFn = jest.fn();
-const mockGetFn = jest.fn();
-const mockTasklistsList = jest.fn();
-const mockTasksList = jest.fn();
-const mockClientInit = jest.fn();
-const mockLoad = jest.fn();
+const mockSignIn = vi.fn();
+const mockSignOut = vi.fn();
+const mockListenFn = vi.fn();
+const mockGetFn = vi.fn();
+const mockTasklistsList = vi.fn();
+const mockTasksList = vi.fn();
+const mockClientInit = vi.fn();
+const mockLoad = vi.fn();
 
 (globalThis as any).gapi = {
   load: mockLoad,
@@ -110,7 +110,7 @@ describe("updateSigninStatus", () => {
 
   it("should hide authorize button and show signout button when signed in", () => {
     // Mock listTaskLists to prevent actual API call
-    mockTasklistsList.mockReturnValue({ then: jest.fn() });
+    mockTasklistsList.mockReturnValue({ then: vi.fn() });
 
     updateSigninStatus(true);
 
@@ -126,7 +126,7 @@ describe("updateSigninStatus", () => {
   });
 
   it("should call listTaskLists when signed in", () => {
-    mockTasklistsList.mockReturnValue({ then: jest.fn() });
+    mockTasklistsList.mockReturnValue({ then: vi.fn() });
 
     updateSigninStatus(true);
 
@@ -164,7 +164,7 @@ describe("initClient", () => {
   });
 
   it("should call gapi.client.init with correct parameters", () => {
-    mockClientInit.mockReturnValue({ then: jest.fn() });
+    mockClientInit.mockReturnValue({ then: vi.fn() });
 
     initClient();
 
@@ -194,7 +194,7 @@ describe("initClient", () => {
 
   it("should handle the initial sign-in state on success", () => {
     mockGetFn.mockReturnValue(true);
-    mockTasklistsList.mockReturnValue({ then: jest.fn() });
+    mockTasklistsList.mockReturnValue({ then: vi.fn() });
     mockClientInit.mockReturnValue({
       then: (onSuccess: () => void) => {
         onSuccess();
@@ -271,7 +271,7 @@ describe("listTaskLists", () => {
   });
 
   it("should call tasklists.list with maxResults of 10", () => {
-    mockTasklistsList.mockReturnValue({ then: jest.fn() });
+    mockTasklistsList.mockReturnValue({ then: vi.fn() });
 
     listTaskLists();
 
@@ -288,7 +288,7 @@ describe("listTaskLists", () => {
       },
     };
 
-    mockTasksList.mockReturnValue({ then: jest.fn() });
+    mockTasksList.mockReturnValue({ then: vi.fn() });
     mockTasklistsList.mockReturnValue({
       then: (callback: (response: any) => void) => {
         callback(mockResponse);
@@ -353,7 +353,7 @@ describe("listTaskLists", () => {
       },
     };
 
-    mockTasksList.mockReturnValue({ then: jest.fn() });
+    mockTasksList.mockReturnValue({ then: vi.fn() });
     mockTasklistsList.mockReturnValue({
       then: (callback: (response: any) => void) => {
         callback(mockResponse);
@@ -372,7 +372,7 @@ describe("listTaskLists", () => {
       },
     };
 
-    mockTasksList.mockReturnValue({ then: jest.fn() });
+    mockTasksList.mockReturnValue({ then: vi.fn() });
     mockTasklistsList.mockReturnValue({
       then: (callback: (response: any) => void) => {
         callback(mockResponse);
