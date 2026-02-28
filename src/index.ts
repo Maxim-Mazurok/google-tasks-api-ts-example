@@ -13,7 +13,7 @@ const authorizeButton = document.getElementById('authorize_button');
 const signoutButton = document.getElementById('signout_button');
 
 // Cache for task lists to avoid refetching
-let cachedTaskLists: any[] = [];
+export let cachedTaskLists: any[] = [];
 
 /**
  *  On load, called to load the auth2 library and API client library.

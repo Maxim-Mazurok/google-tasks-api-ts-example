@@ -63,6 +63,7 @@ import {
   moveTask,
   searchTasks,
   getOverdueTasks,
+  cachedTaskLists,
 } from "../index";
 
 describe("createTask", () => {
@@ -268,5 +269,73 @@ describe("getOverdueTasks", () => {
       (call: any[]) => call[0].textContent
     );
     expect(appendedTexts).toContain("Overdue tasks: 1\n");
+  });
+});
+
+describe("searchTasks", () => {
+  beforeEach(() => {
+    mockTasksList.mockReset();
+    mockContentElement.appendChild.mockClear();
+    // Reset cache before each test
+    cachedTaskLists.splice(0, cachedTaskLists.length);
+  });
+
+  it("should return empty array when cache is empty", async () => {
+    const results = await searchTasks("anything");
+    expect(results).toEqual([]);
+    expect(mockTasksList).not.toHaveBeenCalled();
+  });
+
+  it("should search across cached task lists and return matching tasks", async () => {
+    cachedTaskLists.push({ id: "list-work", title: "Work" });
+
+    mockTasksList.mockReturnValue({
+      then: (cb) => cb({
+        result: {
+          items: [
+            { title: "Write report", id: "task-1" },
+            { title: "Buy groceries", id: "task-2" },
+          ],
+        },
+      }),
+    });
+
+    const results = await searchTasks("report");
+
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("Write report");
+  });
+
+  it("should be case-insensitive when matching", async () => {
+    cachedTaskLists.push({ id: "list-work", title: "Work" });
+
+    mockTasksList.mockReturnValue({
+      then: (cb) => cb({
+        result: {
+          items: [{ title: "URGENT: Fix bug", id: "task-3" }],
+        },
+      }),
+    });
+
+    const results = await searchTasks("urgent");
+
+    expect(results).toHaveLength(1);
+    expect(results[0].title).toBe("URGENT: Fix bug");
+  });
+
+  it("should return empty array when no tasks match the query", async () => {
+    cachedTaskLists.push({ id: "list-personal", title: "Personal" });
+
+    mockTasksList.mockReturnValue({
+      then: (cb) => cb({
+        result: {
+          items: [{ title: "Buy groceries", id: "task-4" }],
+        },
+      }),
+    });
+
+    const results = await searchTasks("nonexistent");
+
+    expect(results).toEqual([]);
   });
 });
