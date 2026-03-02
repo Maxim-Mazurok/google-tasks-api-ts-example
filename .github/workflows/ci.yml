@@ -23,6 +23,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Create config from example (CI uses placeholder credentials — unit tests mock gapi)
+        run: cp src/config.example.ts src/config.ts
+
       - run: npm run compile
 
       - run: npm test
