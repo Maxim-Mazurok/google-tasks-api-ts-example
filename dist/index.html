@@ -6,15 +6,20 @@
 </head>
 <body>
 <!--Add buttons to initiate auth sequence and sign out-->
-<button id="authorize_button" style="display: none;">Authorize</button>
-<button id="signout_button" style="display: none;">Sign Out</button>
+<button id="authorize_button" style="display: none;" onclick="handleAuthClick()">Authorize</button>
+<button id="signout_button" style="display: none;" onclick="handleSignoutClick()">Sign Out</button>
 
 <pre id="content" style="white-space: pre-wrap;"></pre>
 
+<script>var exports = {};</script>
+<script src="config.js"></script>
 <script src="index.js"></script>
 <script async defer src="https://apis.google.com/js/api.js"
         onload="this.onload=function(){};handleClientLoad()"
         onreadystatechange="if (this.readyState === 'complete') this.onload()">
+</script>
+<script async defer src="https://accounts.google.com/gsi/client"
+        onload="gisLoaded()">
 </script>
 </body>
 </html>

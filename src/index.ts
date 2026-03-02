@@ -84,6 +84,7 @@ export function handleAuthClick() {
       appendPre(JSON.stringify(tokenResponse, null, 2));
       return;
     }
+    gapi.client.setToken(tokenResponse as any);
     getSignoutButton() && (getSignoutButton()!.style.display = 'block');
     getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'none');
     listTaskLists();
@@ -102,7 +103,7 @@ export function handleSignoutClick() {
   const token = gapi.client.getToken();
   if (token !== null) {
     google.accounts.oauth2.revoke(token.access_token, () => {});
-    gapi.client.setToken('' as any);
+    gapi.client.setToken(null);
     const content = document.getElementById('content') as HTMLPreElement | null;
     if (content) content.innerText = '';
     getAuthorizeButton() && (getAuthorizeButton()!.style.display = 'block');
